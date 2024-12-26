@@ -12,6 +12,8 @@ type templateData struct {
 	CurrentYear int
 	Snippet     models.Snippet
 	Snippets    []models.Snippet
+	// this form to pass the validation errors and previously submitted data back to the template for redisplay
+	Form        any
 }
 
 func humanDate(t time.Time) string {
@@ -20,7 +22,7 @@ func humanDate(t time.Time) string {
 
 // custom tempalate functions can accept as many articles as they need to but must return one value only (although returning error as second value is allowed)
 var functions = template.FuncMap{
-	"humanDate" : humanDate,
+	"humanDate": humanDate,
 }
 
 func newTemplateCache() (map[string]*template.Template, error) {
@@ -38,7 +40,7 @@ func newTemplateCache() (map[string]*template.Template, error) {
 		// extract file name like base.tmpl, etc
 		name := filepath.Base(page)
 
-		// The template.FuncMap must be registered with the tempalate set before we 
+		// The template.FuncMap must be registered with the tempalate set before we
 		// call parsefiles()
 		// hence, we have to use template.new() to create an empty template set
 		// use the funcs() method to register the funcmap and then parse the files as we do
