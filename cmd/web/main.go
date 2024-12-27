@@ -7,7 +7,10 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"time"
 
+	"github.com/alexedwards/scs/mysqlstore"
+	"github.com/alexedwards/scs/v2"
 	"github.com/empty-crayon/snippetbox/internal/models"
 	"github.com/go-playground/form/v4"
 	_ "github.com/go-sql-driver/mysql"
@@ -16,9 +19,10 @@ import (
 type application struct {
 	logger *slog.Logger
 	// Allows us to make the snippet model object available to our handlers
-	snippets      *models.SnippetModel
-	templateCache map[string]*template.Template
-	formDecoder   *form.Decoder
+	snippets       *models.SnippetModel
+	templateCache  map[string]*template.Template
+	formDecoder    *form.Decoder
+	sessionManager *scs.SessionManager
 }
 
 func main() {
@@ -50,13 +54,20 @@ func main() {
 	}
 
 	formDecoder := form.NewDecoder()
-	
+
+	// initialise a new session manager
+	sessionManager := scs.New()
+	// configure it to use our mysql database as the session store
+	sessionManager.Store = mysqlstore.New(db)
+	// setting a lifetime of 12 hours (so that sessions expire 12 hours after first being created)
+	sessionManager.Lifetime = 12 * time.Hour
 
 	app := &application{
-		logger:        logger,
-		snippets:      &models.SnippetModel{DB: db},
-		templateCache: templateCache,
-		formDecoder: formDecoder,
+		logger:         logger,
+		snippets:       &models.SnippetModel{DB: db},
+		templateCache:  templateCache,
+		formDecoder:    formDecoder,
+		sessionManager: sessionManager,
 	}
 
 	logger.Info("Starting Server", "addr", *addr)
