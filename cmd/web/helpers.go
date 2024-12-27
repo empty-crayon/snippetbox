@@ -68,6 +68,7 @@ func (app *application) render(w http.ResponseWriter, r *http.Request, status in
 		app.serverError(w, r, err)
 		return
 	}
+
 	// if there is no error, only then we send status ok
 	w.WriteHeader(status)
 	// INSTEAD OF:
