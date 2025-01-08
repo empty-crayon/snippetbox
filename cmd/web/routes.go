@@ -13,7 +13,7 @@ func (app *application) routes() http.Handler {
 
 	mux.Handle("GET /static/", http.StripPrefix("/static", fileServer))
 
-	dynamic := alice.New(app.sessionManager.LoadAndSave, app.noSurf)
+	dynamic := alice.New(app.sessionManager.LoadAndSave, app.noSurf, app.authenticate)
 
 	// mux.handle if you have http.handler
 	// mux.handlefunc when registering functions as routes in a mux

@@ -51,7 +51,7 @@ func (m *UserModel) Insert(name, email, password string) error {
 
 // Autheticate whether a user exists in the database, return relevant id if  yes or error
 func (m *UserModel) Authenticate(email, password string) (int, error) {
-	var id int 
+	var id int
 	var hashedPassword []byte
 	stmt := "Select id, hashed_password FROM users WHERE email = ?"
 
@@ -77,5 +77,11 @@ func (m *UserModel) Authenticate(email, password string) (int, error) {
 }
 
 func (m *UserModel) Exists(id int) (bool, error) {
-	return false, nil
+	var exists bool
+
+	stmt := "SELECT EXISTS(SELECT true FROM users WHERE id = ?)"
+
+	err := m.DB.QueryRow(stmt, id).Scan(&exists)
+
+	return exists, err
 }
