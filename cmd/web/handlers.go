@@ -17,6 +17,13 @@ type snippetCreateForm struct {
 	validator.Validator `form:"-"`
 }
 
+type userSignupForm struct {
+	Name                string `form:"name"`
+	Email               string `form:"email"`
+	Password            string `form:"password"`
+	validator.Validator `form:"-"`
+}
+
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
 
 	snippets, err := app.snippets.Latest()
@@ -47,8 +54,6 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-
-
 
 	data := app.newTemplateData(r)
 	data.Snippet = snippet
@@ -95,10 +100,57 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 		app.serverError(w, r, err)
 		return
 	}
-	
+
 	// put() method to add a string value to corresponding key to the session data
 	app.sessionManager.Put(r.Context(), "flash", "Snippet successfully created!")
 
 	http.Redirect(w, r, fmt.Sprintf("/snippet/view/%d", id), http.StatusSeeOther)
+
+}
+
+func (app *application) userSignup(w http.ResponseWriter, r *http.Request) {
+	data := app.newTemplateData(r)
+	data.Form = userSignupForm{}
+	app.render(w, r, http.StatusOK, "signup.tmpl", data)
+}
+
+func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
+	var form userSignupForm
+	//form is the target destination where we want to decode our form
+	err := app.decodePostForm(r, &form)
+
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+	}
+
+	// not blank checks for email, pwd, name
+	form.CheckField(validator.NotBlank(form.Email), "email", "This field cannot be blank")
+	form.CheckField(validator.NotBlank(form.Name), "name", "This field cannot be blank")
+	form.CheckField(validator.NotBlank(form.Password), "password", "This field cannot be blank")
+
+	// format check fro email
+	form.CheckField(validator.Matches(form.Email, validator.EmailRX), "email", "This field must be a valid email address")
+
+	// Password length validation
+	form.CheckField(validator.MinChars(form.Password, 8), "password", "This field must be at least 8 characters long")
+
+	if !form.Valid() {
+		data := app.newTemplateData(r)
+		data.Form = form
+		app.render(w, r, http.StatusUnprocessableEntity, "signup.tmpl", data)
+		return
+	}
+
+	fmt.Fprintln(w, "Create a new user...")
+}
+func (app *application) userLogin(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintln(w, "display form for logging in a user")
+}
+func (app *application) userLoginPost(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintln(w, "Authenticate and login the user..")
+
+}
+func (app *application) userLogoutPost(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintln(w, "logout the user...")
 
 }
